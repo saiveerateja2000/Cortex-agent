@@ -1,12 +1,14 @@
 """Application configuration loaded from environment variables."""
 
-import os
 from functools import lru_cache
 
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(env_file=".env")
+
     # Application
     APP_NAME: str = "Cortex Agent"
     APP_VERSION: str = "1.0.0"
@@ -25,9 +27,6 @@ class Settings(BaseSettings):
 
     # Logging
     LOG_LEVEL: str = "INFO"
-
-    class Config:
-        env_file = ".env"
 
 
 @lru_cache()

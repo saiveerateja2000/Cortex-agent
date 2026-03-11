@@ -1,12 +1,17 @@
 """SQLAlchemy ORM models for Cortex Agent."""
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+
+def _utcnow() -> datetime:
+    """Return the current UTC time as a timezone-aware datetime."""
+    return datetime.now(timezone.utc)
 
 
 class GoalStatus(str, enum.Enum):
@@ -43,9 +48,9 @@ class Goal(Base):
     )
     priority: Mapped[int] = mapped_column(Integer, default=5)
     context: Mapped[dict | None] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
     )
 
     tasks: Mapped[list["Task"]] = relationship("Task", back_populates="goal", cascade="all, delete-orphan")
@@ -70,9 +75,9 @@ class Task(Base):
     result: Mapped[dict | None] = mapped_column(JSON)
     error_message: Mapped[str | None] = mapped_column(Text)
     celery_task_id: Mapped[str | None] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
     )
 
     goal: Mapped["Goal"] = relationship("Goal", back_populates="tasks")
@@ -95,7 +100,7 @@ class ActionLog(Base):
     error_message: Mapped[str | None] = mapped_column(Text)
     duration_seconds: Mapped[float | None] = mapped_column(Float)
     attempt_number: Mapped[int] = mapped_column(Integer, default=1)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     task: Mapped["Task"] = relationship("Task", back_populates="actions")
 
@@ -108,7 +113,7 @@ class MemoryEntry(Base):
     entry_type: Mapped[str] = mapped_column(String(50), nullable=False)  # outcome, metric, insight
     content: Mapped[dict] = mapped_column(JSON, nullable=False)
     tags: Mapped[list | None] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     goal: Mapped["Goal | None"] = relationship("Goal", back_populates="memory_entries")
 
@@ -120,4 +125,4 @@ class PerformanceMetric(Base):
     metric_name: Mapped[str] = mapped_column(String(100), nullable=False)
     metric_value: Mapped[float] = mapped_column(Float, nullable=False)
     context: Mapped[dict | None] = mapped_column(JSON)
-    recorded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

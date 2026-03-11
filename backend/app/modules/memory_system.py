@@ -1,7 +1,7 @@
 """Memory System – stores and retrieves goals, outcomes, and metrics."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -81,7 +81,7 @@ class MemorySystem:
             metric_name=name,
             metric_value=value,
             context=context or {},
-            recorded_at=datetime.utcnow(),
+            recorded_at=datetime.now(timezone.utc),
         )
         self.db.add(metric)
         self.db.commit()
